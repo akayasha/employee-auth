@@ -19,7 +19,7 @@ type User struct {
 	Email        string    `gorm:"type:varchar(255);uniqueIndex;not null"`
 	PasswordHash string    `gorm:"not null"`
 	Role         Role      `gorm:"size:50;default:'user'"`
-	Dob          time.Time `gorm:"not null"`
+	Dob          time.Time `gorm:"not null" json:"dob"`
 }
 
 func ValidateRole(role Role) error {

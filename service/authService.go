@@ -13,11 +13,11 @@ var userRepo repository.UserRepository
 
 // RegisterUser registers a new user
 func RegisterUser(nip, username, fullName, email, password, role string, dob time.Time) (*models.User, error) {
-
 	if userRepo == nil {
 		userRepo = repository.NewUserRepository(config.DB)
 	}
 
+	//
 	// Validate user data
 	userData := models.User{Username: username, Email: email, PasswordHash: password, Role: models.Role(role)}
 	if validationErr := utils.ValidateStruct(userData, "Username", "Email", "PasswordHash"); validationErr != "" {
@@ -49,18 +49,17 @@ func RegisterUser(nip, username, fullName, email, password, role string, dob tim
 	return user, nil
 }
 
-// Login authenticates
-func LoginUser(email, password string) (map[string]interface{}, error) {
-
-	// Find User By Email
-	user, err := userRepo.FindByEmail(email)
+// LoginUser authenticates a user
+func LoginUser(identifier, password string) (map[string]interface{}, error) {
+	// Find user by email, username, or NIP
+	user, err := userRepo.FindByIdentifier(identifier)
 	if err != nil {
-		return nil, fmt.Errorf("User not found: %v", err)
+		return nil, fmt.Errorf("User not found")
 	}
 
 	// Validate password
 	if !utils.CheckPasswordHash(password, user.PasswordHash) {
-		return nil, fmt.Errorf("Invalid Credentilas")
+		return nil, fmt.Errorf("Invalid Credentials")
 	}
 
 	// Generate JWT Token

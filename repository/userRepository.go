@@ -14,6 +14,7 @@ type UserRepository interface {
 	UpdateUser(user *models.User) error
 	FindByName(name string) (*models.User, error)
 	FindByNIP(nip string) (*models.User, error)
+	FindByIdentifier(identifier string) (*models.User, error)
 }
 
 type userRepository struct {
@@ -25,6 +26,15 @@ func NewUserRepository(db *gorm.DB) UserRepository {
 		panic("Database connection is nil")
 	}
 	return &userRepository{db: db}
+}
+
+// FindByIdentifier searches for a user by email, username, or NIP
+func (repo *userRepository) FindByIdentifier(identifier string) (*models.User, error) {
+	var user models.User
+	if err := repo.db.Where("email = ? OR username = ? OR nip = ?", identifier, identifier, identifier).First(&user).Error; err != nil {
+		return nil, err
+	}
+	return &user, nil
 }
 
 // Create Users

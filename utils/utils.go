@@ -2,13 +2,25 @@ package utils
 
 import (
 	"employee-auth/models"
+	"errors"
 	"fmt"
 	"github.com/golang-jwt/jwt/v4"
 	"golang.org/x/crypto/bcrypt"
+	"os"
 	"reflect"
 	"strings"
 	"time"
 )
+
+var JwtKey = []byte(os.Getenv("JWT_SECRET_KEY"))
+
+type Claims struct {
+	NIP   string `json:"nip"`
+	Name  string `json:"name"`
+	Email string `json:"email"`
+	Role  string `json:"role"`
+	jwt.StandardClaims
+}
 
 // Hashing Password
 func HashPassword(password string) (string, error) {
@@ -32,7 +44,7 @@ func GenerateJWT(nip, name, email string, role models.Role) (string, error) {
 	claims["exp"] = time.Now().Add(time.Hour * 72).Unix()
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString([]byte("secret"))
+	return token.SignedString(JwtKey)
 }
 
 // Validate Service
@@ -51,4 +63,25 @@ func ValidateStruct(input interface{}, requiredFields ...string) string {
 		return fmt.Sprintf("Missing or empty fields: %v", strings.Join(missingFields, ", "))
 	}
 	return ""
+}
+
+func ValidateToken(tokenString string) (*Claims, error) {
+	claims := &Claims{}
+
+	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+		return JwtKey, nil
+	})
+
+	if err != nil {
+		if err == jwt.ErrSignatureInvalid {
+			return nil, errors.New("invalid token signature")
+		}
+		return nil, errors.New("invalid token")
+	}
+
+	if !token.Valid {
+		return nil, errors.New("invalid token")
+	}
+
+	return claims, nil
 }

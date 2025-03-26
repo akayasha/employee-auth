@@ -14,6 +14,7 @@ func SetupRouter() *gin.Engine {
 	{
 		authRoutes.POST("/register", controllers.RegisterUser)
 		authRoutes.POST("/login", controllers.LoginUser)
+		authRoutes.GET("/validate", controllers.ValidateToken)
 	}
 
 	return r
